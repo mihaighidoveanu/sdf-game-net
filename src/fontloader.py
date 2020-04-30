@@ -19,10 +19,10 @@ if __name__ == '__main__':
     # display character
     # generate test points in an n x n grid, so we can show the result as an image
     size = 100 
-    canvas = np.array([ [ x, y ] for x in range(size) for y in range(size) ])
+    canvas = np.array([ [ x, y ] for y in reversed(range(size)) for x in range(size) ])
     canvas = 5*(canvas/100 - 0.5)
 
-    canvas = [lib.get_glyph_distance(index, scale, p[0], p[1]) for p in canvas]
+    canvas = [lib.get_glyph_distance(index, scale, *p) for p in canvas]
     canvas = np.array(canvas)
 
     X, Y = np.meshgrid(range(size), range(size))
