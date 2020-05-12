@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import embeddings
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = "2"
 
@@ -34,8 +35,6 @@ if __name__ == '__main__':
         def glyph_sdf(ps): return np.array([lib.get_glyph_distance(index, scale, *p) for p in ps ])
         return glyph_sdf
 
-
-
     char_set = list("ABC")
     char_set = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     char_set = list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
@@ -47,15 +46,10 @@ if __name__ == '__main__':
     embedding_size = 32
     # char_embedding = np.random.uniform(-1, 1, size=(char_count, embedding_size)) # np.random.choice(1000, size=(char_count, replace=False)/1000
 
-
     print(char_ids)
     print(glyph_indices)
 
-
-
-
     ## Model
-    
     def scaled_loss(y_true, y_pred):
         return tf.reduce_mean(((y_true - y_pred) / (tf.maximum(tf.abs(y_true), 0.0001)**0.3))**2)
 
@@ -77,6 +71,8 @@ if __name__ == '__main__':
 
     model = keras.Model([model_input], [model_layers(_model_input)])
     model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005), loss=scaled_loss, metrics=["mse"])
+    print(model.summary())
+
     # model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005), loss="mse")
 
     trainable_count = np.sum([K.count_params(w) for w in model.trainable_weights])
@@ -89,10 +85,12 @@ if __name__ == '__main__':
 
     ## Training
 
+    totrain = True
     train_count = 32*1000 # Shared across shapes!
-
     total_epochs = 50
     for epoch in range(total_epochs):
+        if not totrain:
+            break
         print("%s/%s" % (epoch+1, total_epochs))
         train_X = np.empty((train_count, 2 + 1))
         train_X[:,:2] = 0.5*np.random.normal(size=(train_count, 2))
@@ -106,7 +104,7 @@ if __name__ == '__main__':
             class_mask = np.where(char_dist == i)[0]
             train_y[class_mask] = get_glyph_sdf(glyph_index)(train_X[class_mask][:, :2])
 
-        model.fit(train_X, train_y, batch_size=32, epochs=1)
+        history = model.fit(train_X, train_y, batch_size=32, epochs=1)
 
         # res = model.predict(train_X)
 
@@ -116,7 +114,17 @@ if __name__ == '__main__':
 
     # display character
     # generate test points in an n x n grid, so we can show the result as an image
+    # save model
+    model_path = 'model.h5'
+    if totrain:
+        model.save_weights(model_path)
+    else:
+        model.load_weights(model_path)
+
+    toplot = False
     for i, glyph_index in enumerate(glyph_indices):
+        if not toplot:
+            break
         def predict(ps):
             _ps = np.empty((len(ps), 2 + 1))
             _ps[:,:2] = ps
@@ -130,3 +138,8 @@ if __name__ == '__main__':
         utils.plot_sdf(get_glyph_sdf(glyph_index), scale=scale, fill=False)
         plt.savefig("%s/%s.png" % (out_dir, char_set[i]))
         plt.close()
+
+    # plot embeddings
+    toembed = True
+    if toembed:
+        embeddings.visualise(model)
