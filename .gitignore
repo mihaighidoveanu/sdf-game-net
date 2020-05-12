@@ -2,3 +2,4 @@ _*.c
 *.so
 *.o
 **/__pycache__
+archive/
