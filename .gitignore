@@ -3,3 +3,4 @@ _*.c
 *.o
 **/__pycache__
 archive/
+*.h5
