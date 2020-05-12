@@ -1,4 +1,4 @@
-    
+import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,3 +20,10 @@ def plot_sdf(sdf, scale=1, size=100, offset=0.5, fill=True):
         cp = plt.contour(X, Y, canvas.reshape((size, size)), 16, colors='#ffffff99', linewidths=0.75)
 
     return cp
+
+def clamp(x, delta):
+    return tf.minimum(delta, tf.maximum(-delta, x))
+
+def deepsdf_loss(y_true, y_pred):
+    delta = 0
+    return tf.abs(clamp(y_true, delta) - clamp(y_pred, delta))

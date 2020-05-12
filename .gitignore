@@ -1,5 +1,5 @@
 _*.c
 *.so
 *.o
-
-out/
+**/__pycache__
+archive/
