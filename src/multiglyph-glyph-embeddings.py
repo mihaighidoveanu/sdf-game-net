@@ -115,7 +115,10 @@ if __name__ == '__main__':
     # display character
     # generate test points in an n x n grid, so we can show the result as an image
     # save model
-    model_path = 'model.h5'
+    model_dir = '../models'
+    os.makedirs(model_dir, exist_ok = True)
+    model_name = f'model_{char_count}_{total_epochs}.h5'
+    model_path = os.path.join(model_dir, model_name)
     if totrain:
         model.save_weights(model_path)
     else:
@@ -142,4 +145,4 @@ if __name__ == '__main__':
     # plot embeddings
     toembed = True
     if toembed:
-        embeddings.visualise(model)
+        embeddings.visualise(model, out_dir)

@@ -20,13 +20,14 @@ def getmodel(model):
     return transformer, input_dim
 
 
-def visualise(model):
+def visualise(model, out_dir):
     model, input_dim = getmodel(model)
     x, y = getdata(input_dim)
     embeddings = model.predict(x)
     compressor = TSNE(metric = 'euclidean')
     e = compressor.fit_transform(embeddings)
     plt.scatter(e[:, 0], e[:, 1], c = y, cmap = 'Reds')
+    plt.savefig(f'{out_dir}/tsne.png')
     plt.show()
 
 def save(model):
