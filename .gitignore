@@ -4,3 +4,9 @@ _*.c
 **/__pycache__
 archive/
 *.h5
+out/
+media/
+.vscode/
+
+*.pyd
+*.def
