@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     ## Training
 
-    totrain = True
+    totrain = False
     train_count = 32*1000 # Shared across shapes!
     total_epochs = 50
     for epoch in range(total_epochs):
@@ -145,4 +145,4 @@ if __name__ == '__main__':
     # plot embeddings
     toembed = True
     if toembed:
-        embeddings.visualise(model, out_dir)
+        embeddings.visualise(model, out_dir, char_classes = char_count)
