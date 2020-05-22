@@ -8,7 +8,7 @@ import utils
 keras = tf.keras
 
 if __name__ == '__main__':
-    char = 'B'
+    char = 'a'
     scale = 1
 
     font_path = "../fonts/times.ttf".encode('ascii')
@@ -32,8 +32,7 @@ if __name__ == '__main__':
         keras.layers.Dense(512, activation="relu"),
         keras.layers.Dense(1, activation=None),
     ])
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005), loss=scaled_loss, metrics=["mse"])
-
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005), loss=utils.ScaledLoss(), metrics=["mse"])
 
     ## Training
 
@@ -42,6 +41,12 @@ if __name__ == '__main__':
     for epochs in range(10):
         train_X = 0.5*np.random.normal(size=(train_count, 2))
         train_y = glyph_sdf(train_X)
+        # print(pred_y)
+        # print(pred_y.shape)
+        # print(pred_y.dtype)
+        # print(utils.deepsdf_loss(train_y, pred_y))
+        # print(utils.deepsdf_loss(train_y, pred_y).dtype)
+        # exit()
 
         model.fit(train_X, train_y, batch_size=32, epochs=1)
 

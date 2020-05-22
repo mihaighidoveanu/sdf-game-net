@@ -23,13 +23,15 @@ def plot_sdf(sdf, scale=1, size=100, offset=0.5, fill=True):
 
     return cp
 
-def clamp(x, delta):
-    return tf.minimum(delta, tf.maximum(-delta, x))
-
-def deepsdf_loss(y_true, y_pred):
-    delta = 0
-    return tf.abs(clamp(y_true, delta) - clamp(y_pred, delta))
-
+def DeepSDFLoss(delta = 0.1):
+    def clamp(x, delta):
+        return tf.minimum(delta, tf.maximum(-delta, x))
+    
+    def deepsdf_loss(y_true, y_pred):
+        result = tf.reduce_mean(tf.abs(clamp(y_true, delta) - clamp(y_pred, delta)))
+        result = tf.cast(result, 'float32')
+        return result
+    return deepsdf_loss
 
 def ScaledLoss(c = 0.2):
     def scaled_loss(y_true, y_pred):
