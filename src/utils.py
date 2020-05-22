@@ -2,11 +2,12 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 from _fontloader_cffi import ffi, lib
 
 
-def plot_sdf(sdf, scale=1, size=100, offset=0.5, fill=True):
+def plot_sdf(sdf, scale=1, size=100, offset=0.5, fill=True, levels=16):
     canvas = np.array([ [ x, y ] for y in reversed(range(size)) for x in range(size) ])
     canvas = scale*(canvas/size - offset)
 
@@ -16,10 +17,10 @@ def plot_sdf(sdf, scale=1, size=100, offset=0.5, fill=True):
     X, Y = np.meshgrid(range(size), range(size))
 
     if fill:
-        cp = plt.contourf(X, Y, canvas.reshape((size, size)), 16)
+        cp = plt.contourf(X, Y, canvas.reshape((size, size)), levels)
         plt.colorbar(cp)
     else:
-        cp = plt.contour(X, Y, canvas.reshape((size, size)), 16, colors='#ffffff99', linewidths=0.75)
+        cp = plt.contour(X, Y, canvas.reshape((size, size)), levels, colors='#ffffff99', linewidths=0.75)
 
     return cp
 
@@ -29,13 +30,13 @@ def DeepSDFLoss(delta = 0.1):
     
     def deepsdf_loss(y_true, y_pred):
         result = tf.reduce_mean(tf.abs(clamp(y_true, delta) - clamp(y_pred, delta)))
-        result = tf.cast(result, 'float32')
+        # result = tf.cast(result, 'float32') # pretty sure we don't need to do this
         return result
     return deepsdf_loss
 
-def ScaledLoss(c = 0.2):
+def ScaledLoss(c = 0.2, e=0.0001):
     def scaled_loss(y_true, y_pred):
-        return tf.reduce_mean(((y_true - y_pred) / (tf.maximum(tf.abs(y_true), 0.0001)**c))**2)
+        return tf.reduce_mean(((y_true - y_pred) / (tf.maximum(tf.abs(y_true), e)**c))**2)
     return scaled_loss
 
 def print_model_variable_counts(model):
@@ -54,16 +55,19 @@ def get_glyph_sdf(index, scale=1):
 def plot_glyphs(out_dir, model, glyph_data, scale=1):
     os.makedirs(out_dir, exist_ok=True)
 
-    for glyph_index, name, data in enumerate(glyph_indices):
+    for glyph_index, name, data in glyph_data:
         def predict(ps):
-            _ps = np.empty((len(ps), 2 + len(data)))
-            _ps[:,:2] = ps
-            _ps[:,2] = data
-            return model.predict(_ps)
+            # _ps = np.empty((len(ps), 2 + len(data)))
+            # _ps[:,:2] = ps
+            # _ps[:,2:] = data
+
+            datas = [ np.array([ datum ]*len(ps)) for datum in data ]
+            datas = [ ps, *datas ]
+            return model.predict(datas)
 
         fig = plt.figure()
 
-        utils.plot_sdf(predict, scale=scale)
-        utils.plot_sdf(get_glyph_sdf(glyph_index, scale=scale), scale=scale, fill=False)
+        plot_sdf(predict, scale=scale, size=64)
+        plot_sdf(get_glyph_sdf(glyph_index, scale=scale), scale=scale, size=64, fill=False)
         plt.savefig(f"{out_dir}/{name}.png")
         plt.close()

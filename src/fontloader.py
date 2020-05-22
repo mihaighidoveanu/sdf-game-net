@@ -2,6 +2,8 @@ from _fontloader_cffi import ffi, lib
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
 if __name__ == '__main__':
     font_path = "../fonts/times.ttf".encode('ascii')
     char = 'a'

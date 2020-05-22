@@ -22,6 +22,38 @@ def project(out_dir, embedding_layer, ids, labels, name="tsne.png"):
     plt.show()
     plt.close()
 
+def project_grouped(out_dir, embedding_layer, groups, name="tsne.png"):
+    os.makedirs(out_dir, exist_ok=True)
+
+
+    model = keras.Sequential([ embedding_layer ])
+    all_shape_embeddings = None
+
+    for ids, labels, name in groups:
+        embeddings = model.predict(ids).reshape((len(ids), -1))
+        if all_shape_embeddings is None:
+            all_shape_embeddings = embeddings
+        else:
+            all_shape_embeddings = np.append(all_shape_embeddings, embeddings, axis=0)
+
+
+    compressor = TSNE(metric = 'euclidean')
+    tsne_embeddings = compressor.fit_transform(all_shape_embeddings)
+
+    offset = 0
+    for i, (ids, labels, name) in enumerate(groups):
+        offset_end = offset + len(ids)
+        plt.scatter(tsne_embeddings[offset:offset_end, 0], tsne_embeddings[offset:offset_end, 1], label = name)
+        for label, coord in zip(labels, tsne_embeddings[offset:offset_end]):
+            plt.annotate(label, coord)
+        offset = offset_end
+
+    plt.legend()
+
+    plt.savefig(f'{out_dir}/tsne.png')
+    plt.show()
+    plt.close()
+
 if __name__ == '__main__':
     char_set = list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
     char_count = len(char_set)
