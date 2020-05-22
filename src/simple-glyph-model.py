@@ -32,7 +32,7 @@ if __name__ == '__main__':
         keras.layers.Dense(512, activation="relu"),
         keras.layers.Dense(1, activation=None),
     ])
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005), loss=utils.ScaledLoss(), metrics=["mse"])
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005), loss=utils.DeepSDFLoss(), metrics=["mse"])
 
     ## Training
 
