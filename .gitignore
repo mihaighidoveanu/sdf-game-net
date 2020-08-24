@@ -10,3 +10,12 @@ media/
 
 *.pyd
 *.def
+
+
+fonts/**/*.eot
+fonts/**/*.otf
+fonts/**/*.woff
+fonts/**/*.woff2
+fonts/**/*.txt
+fonts/**/*.zip
+fonts/*.zip
