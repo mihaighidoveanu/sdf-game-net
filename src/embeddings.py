@@ -6,7 +6,7 @@ from sklearn.manifold import TSNE
 import numpy as np
 import matplotlib.pyplot as plt
 
-def project(out_dir, embedding_layer, ids, labels, name="tsne.png"):
+def project(out_dir, embedding_layer, ids, labels, name):
     os.makedirs(out_dir, exist_ok=True)
     model = keras.Sequential([ embedding_layer ])
     shape_embeddings = model.predict(ids).reshape((len(ids), -1))
@@ -18,7 +18,7 @@ def project(out_dir, embedding_layer, ids, labels, name="tsne.png"):
     for label, coord in zip(labels, tsne_embeddings):
         plt.annotate(label, coord)
 
-    plt.savefig(f'{out_dir}/tsne.png')
+    plt.savefig(f'{out_dir}/{name}.png')
     plt.show()
     plt.close()
 
