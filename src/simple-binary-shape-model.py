@@ -33,7 +33,6 @@ if __name__ == '__main__':
     ])
     model.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
 
-
     ## Training
 
     train_count = 10000

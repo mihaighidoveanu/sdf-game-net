@@ -38,6 +38,7 @@ logdir = f"{out_dir}/logs/scalars/"
 model_dir = f'{out_dir}/model/'
 
 # Training
+model_path = "../out/multi-font/6fonts-26chars/model/model_26_40.h5"
 train_model = True
 tensorboard_logs = train_model and True
 batch_size = 64
@@ -47,22 +48,13 @@ switch_thresh = 2
 importance_alpha = 0.7
 
 # Dataset
-char_set = list("ABC")
 char_set = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-char_set = list("CDEFGOPQRT")
 # char_set = list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
 # char_set = list("abcdefghijklmnopqrstuvwxyz")
 glyph_embedding_size = 32
 
 font_dir = "../fonts/".encode('ascii')
-font_path_times = "../fonts/times.ttf".encode('ascii')
-font_path_baskerville = "../fonts/Libre-Baskerville-master/LibreBaskerville-Regular.ttf".encode('ascii')
-font_path_worksans = "../fonts/Work-Sans-master/fonts/static/TTF/WorkSans-Regular.ttf".encode('ascii')
-font_path_junicoderegular = "../fonts/junicode-master/fonts/Junicode-Regular.ttf".encode('ascii')
-font_path_garamondregular = "../fonts/EBGaramond-0.016/ttf/EBGaramond12-Regular.ttf".encode('ascii')
-font_path_oswaldregular = "../fonts/OswaldFont-master/3.0/Roman/400/Oswald-Regular.ttf".encode('ascii')
-font_path_archivoregular = "../fonts/Archivo/ttf/Archivo-Regular.ttf".encode('ascii')
-font_set = [ font_path_baskerville, font_path_times, font_path_worksans, font_path_junicoderegular, font_path_garamondregular, font_path_oswaldregular, font_path_archivoregular ]
+font_estimate = "../fonts/Chivo-Black.ttf"
 font_names = [ "baskerville", "times", "worksans", "junicoderegular", "garamondregular", "oswaldregular", "archivoregular" ]
 font_embedding_size = 32
 
@@ -94,17 +86,11 @@ if __name__ == '__main__':
     char_count = len(char_set)
     char_ids = [ ord(char) for char in char_set ]
 
-    fonts_set = []
-    for font in os.listdir(font_dir):
-        if os.path.splitext(font)[1] == b'.ttf':
-            font_path = os.path.join(font_dir, font)
-            fonts_set.append(font_path)
-
+    fonts_set = [font_estimate]
     font_count = len(fonts_set)
+    
     print('Fonts ', fonts_set)
     print('Chars ', char_ids)
-
-
 
     ## Model
 
@@ -116,7 +102,7 @@ if __name__ == '__main__':
     model_in_glyph = keras.Input(shape=[1], batch_size=batch_size)
     model_in_font = keras.Input(shape=[1], batch_size=batch_size)
     
-    glyph_embedding = keras.layers.Embedding(char_count, glyph_embedding_size, name="glyph_embedding")
+    glyph_embedding = keras.layers.Embedding(alphabet_count, glyph_embedding_size, name="glyph_embedding")
     glyph_embedding = glyph_embedding(model_in_glyph)
     glyph_embedding = keras.layers.Reshape([glyph_embedding_size])(glyph_embedding) # go from (batch_size, 1, glyph_embedding_size) to (batch_size, glyph_embedding_size)
     
@@ -144,32 +130,25 @@ if __name__ == '__main__':
     model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.00025), loss=utils.ScaledLoss(), metrics=["mse", DeepSDFLossMetric(1.), ScaledLossMetric(0.6)])
 
     model.summary()
-    # utils.print_model_variable_counts(model)
 
-    
+    model = keras.models.load_model(model_path)
+
+    print('Model ', model.summary())
 
     font_importance = [ 1 / font_count for i in range(font_count) ]
     glyph_importance = [ 1 / char_count for i in range(char_count) ]
     ## Training
-    if not train_model:
-        model.load_weights("../out/20200522-175229/model/model_26_50.h5")
-    else:
+    if train_model:
         writer = tf.summary.create_file_writer(logdir)
-        # with  as :
 
         for epoch in range(total_epochs):
             print(f"{epoch+1}/{total_epochs}")
-
-            # if epoch >= switch_thresh:
-            #     glyph_embedding.trainable = epoch % 2 == 0
-            #     font_embedding.trainable = epoch % 2 == 1
 
             # Every epoch we create a new data set. This prevents
             # overfitting, because the model should not see the
             # same point more than once.
 
             # Each point in the training data consists of (x, y, char_id)
-            print(f"Font importance {font_importance}")
 
             train_X_p = 0.6*np.random.normal(size=(train_count, 2))
             train_X_glyph = np.random.choice(char_count, size=train_count, replace=True, p=glyph_importance)
@@ -227,9 +206,6 @@ if __name__ == '__main__':
         model_path = os.path.join(model_dir, model_name)
         model.save(model_path)
 
-
-
-
     ## Plotting 
 
     if plot_results:
@@ -238,7 +214,7 @@ if __name__ == '__main__':
             font_path = os.path.join(font_dir, fonts_set[font_i])
             lib.load_font(font_path)
             font_name = os.path.basename(fonts_set[font_i])
-            glyph_data = [ (lib.get_glyph_index(char_ids[i]), f"{font_name}_{i}_{char_set[i]}", [ i, font_i ]) for i in range(3,7)]
+            glyph_data = [ (lib.get_glyph_index(char_ids[i]), f"{font_name}_{i}_{char_set[i]}", [ i, font_i ]) for i in char_estimate]
             utils.plot_glyphs(out_dir, model, glyph_data, scale=scale)
 
     if plot_embeddings:

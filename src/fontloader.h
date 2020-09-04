@@ -12,13 +12,18 @@ int glyphInit = 0, loadedGlyph = 0;
 ksvtt_glyphsdfinfo glyphInfo;
 stbtt_fontinfo font;
 
-void load_font(const char* path){
+int load_font(const char* path){
     strcpy(fontpath, path);
-    fread(ttf_buffer, 1, 1<<20, fopen(fontpath, "rb"));
+    FILE *f = fopen(fontpath, "rb");
+    if(f == NULL){
+        return 0;
+    }
+    fread(ttf_buffer, 1, 1<<20, f);
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
     fontInit = 1;
+    fclose(f);
+    return 1;
 }
-
 
 int get_glyph_index(int codepoint){
     if (!fontInit) {
